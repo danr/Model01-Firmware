@@ -368,6 +368,9 @@ void setup() {
   // This avoids over-taxing devices that don't have a lot of power to share
   // with USB devices
   LEDOff.activate();
+
+  MouseKeys.speed = 16;
+  MouseKeys.accelSpeed = 0;
 }
 
 /** loop is the second of the standard Arduino sketch functions.
