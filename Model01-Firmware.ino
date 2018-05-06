@@ -162,7 +162,7 @@ KEYMAPS(
    Key_Equals, ___, ___, ___, ___, ___, ___,
                ___, ___, ___, ___, ___, ___,
    Key_Minus,  ___, ___, ___, ___, ___, ___,
-   Key_Backslash, Key_RightAlt, Key_Enter, Key_Spacebar,
+   Key_Backslash, Key_RightAlt, Key_Spacebar, Key_Enter,
    ShiftToLayer(FUNCTION)
    ),
 
