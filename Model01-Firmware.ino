@@ -59,6 +59,8 @@
 // Support for host power management (suspend & wakeup)
 #include "Kaleidoscope-HostPowerManagement.h"
 
+#include "Kaleidoscope-LED-ActiveModColor.h"
+
 
 /** This 'enum' is a list of all the macros used by the Model 01's firmware
   * The names aren't particularly important. What is important is that each
@@ -74,9 +76,12 @@
   */
 
 enum { MACRO_VERSION_INFO,
-       MACRO_ANY
-     };
+       MACRO_ANY,
+       MACRO_SLOW
+      };
 
+#define FAST_MOUSE 16
+#define SLOW_MOUSE 2
 
 
 /** The Model 01's key layouts are defined as 'keymaps'. By default, there are three
@@ -121,7 +126,7 @@ enum { MACRO_VERSION_INFO,
   *
   */
 
-enum { QWERTY, NUMPAD, FUNCTION }; // layers
+enum { QWERTY, EXPERIMENT, NUMPAD, FUNCTION }; // layers
 
 /* This comment temporarily turns off astyle's indent enforcement
  *   so we can make the keymaps actually resemble the physical key layout better
@@ -134,17 +139,32 @@ KEYMAPS(
   (Key_Backtick,  Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDEffectNext,
    Key_Tab,       Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Minus,
    Key_CapsLock,  Key_A, Key_S, Key_D, Key_F, Key_G,
-   Key_LeftShift, Key_Z, Key_X, Key_C, Key_V, Key_B, Key_LeftAlt,
-   Key_LeftControl, Key_Backspace, Key_LeftGui, Key_Delete,
+   Key_LeftShift, Key_Z, Key_X, Key_C, Key_V, Key_B, Key_LeftGui,
+   Key_LeftControl, Key_Backspace, Key_LeftAlt, Key_Delete,
    ShiftToLayer(FUNCTION),
 
-   M(MACRO_ANY),     Key_6, Key_7, Key_8,     Key_9,         Key_0,         Key_RightBracket,
+   LockLayer(EXPERIMENT),     Key_6, Key_7, Key_8,     Key_9,         Key_0,         Key_RightBracket,
    Key_Equals,       Key_Y, Key_U, Key_I,     Key_O,         Key_P,         Key_LeftBracket,
                      Key_H, Key_J, Key_K,     Key_L,         Key_Semicolon, Key_Quote,
    Key_RightAlt,     Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_RightShift,
-   Key_Backslash,        Key_Enter, Key_Spacebar, Key_RightAlt,
+   Key_Backslash,    Key_Enter, Key_Spacebar, Key_Enter,
    ShiftToLayer(FUNCTION)),
 
+  [EXPERIMENT] = KEYMAP_STACKED
+  (___, ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___, ___, ___, Key_Minus,
+   ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___, ___, ___, Key_Equals,
+   Key_LeftAlt, Key_Backspace, Key_LeftGui, Key_Delete,
+   Key_LeftControl,
+
+   ___,        ___, ___, ___, ___, ___, ___,
+   Key_Equals, ___, ___, ___, ___, ___, ___,
+               ___, ___, ___, ___, ___, ___,
+   Key_Minus,  ___, ___, ___, ___, ___, ___,
+   Key_Backslash, Key_RightAlt, Key_Enter, Key_Spacebar,
+   ShiftToLayer(FUNCTION)
+   ),
 
   [NUMPAD] =  KEYMAP_STACKED
   (___, ___, ___, ___, ___, ___, ___,
@@ -154,25 +174,25 @@ KEYMAPS(
    ___, ___, ___, ___,
    ___,
 
-   M(MACRO_VERSION_INFO),  ___, Key_Keypad7, Key_Keypad8,   Key_Keypad9,        Key_KeypadSubtract, ___,
-   ___,                    ___, Key_Keypad4, Key_Keypad5,   Key_Keypad6,        Key_KeypadAdd,      ___,
-                           ___, Key_Keypad1, Key_Keypad2,   Key_Keypad3,        Key_Equals,         ___,
-   ___,                    ___, Key_Keypad0, Key_KeypadDot, Key_KeypadMultiply, Key_KeypadDivide,   Key_Enter,
+   ___, ___, Key_Keypad7, Key_Keypad8,   Key_Keypad9,        Key_KeypadSubtract, M(MACRO_VERSION_INFO),
+   ___, ___, Key_Keypad4, Key_Keypad5,   Key_Keypad6,        Key_KeypadAdd,      ___,
+        ___, Key_Keypad1, Key_Keypad2,   Key_Keypad3,        Key_Equals,         ___,
+   ___, ___, Key_Keypad0, Key_KeypadDot, Key_KeypadMultiply, Key_KeypadDivide,   Key_Enter,
    ___, ___, ___, ___,
    ___),
 
   [FUNCTION] =  KEYMAP_STACKED
-  (___, Key_F1,           Key_F2,      Key_F3,     Key_F4,           Key_F5,           XXX,
-   ___, Key_Home,      Key_PageDown,  Key_PageUp,   Key_End,         ___,    ___,
-   ___, Key_LeftArrow, Key_DownArrow, Key_UpArrow,  Key_RightArrow,  ___,
-   ___, Key_mouseL,    Key_mouseDn,   Key_mouseUp,  Key_mouseR,      ___,    Key_Enter,
-   Key_mouseBtnM,  Key_mouseBtnL, Key_mouseBtnR, ___,
+  (___,             Key_F1,        Key_F2,        Key_F3,       Key_F4,          Key_F5,           XXX,
+   ___,             Key_Home,      Key_PageDown,  Key_PageUp,   Key_End,         Key_mouseScrollL,    ___,
+   ___,             Key_LeftArrow, Key_DownArrow, Key_UpArrow,  Key_RightArrow,  Key_mouseScrollR,
+   M(MACRO_SLOW),   Key_mouseL,    Key_mouseDn,   Key_mouseUp,  Key_mouseR,      ___,    Key_LeftAlt,
+   Key_LeftControl, Key_Backspace, Key_LeftGui,   Key_Delete,
    ___,
 
    ___,       Key_F6,   Key_F7,        Key_F8,        Key_F9,       Key_F10, Key_F11,
-   ___,       ___,      Key_Home,      Key_PageDown,  Key_PageUp,   Key_End,         Key_F12,
-              ___,      Key_LeftArrow, Key_DownArrow, Key_UpArrow,  Key_RightArrow,  ___,
-   Key_Enter, ___,      Key_mouseL,    Key_mouseDn,   Key_mouseUp,  Key_mouseR,      ___,
+   ___,       Key_mouseScrollUp,  Key_Home,      Key_PageDown,  Key_PageUp,   Key_End,         Key_F12,
+              Key_mouseScrollDn,  Key_LeftArrow, Key_DownArrow, Key_UpArrow,  Key_RightArrow,  ___,
+   M(MACRO_SLOW), Key_mouseBtnL,      Key_mouseL,    Key_mouseDn,   Key_mouseUp,  Key_mouseR,  M(MACRO_SLOW),
    ___, Key_mouseBtnM,  Key_mouseBtnL, Key_mouseBtnR,
    ___)
 
@@ -232,6 +252,14 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
 
   case MACRO_ANY:
     anyKeyMacro(keyState);
+    break;
+
+  case MACRO_SLOW:
+    if (keyToggledOn(keyState)) {
+      MouseKeys.speed = SLOW_MOUSE;
+    } else if (keyToggledOff(keyState)) {
+      MouseKeys.speed = FAST_MOUSE;
+    }
     break;
   }
   return MACRO_NONE;
@@ -331,7 +359,7 @@ void setup() {
 
     // The numpad plugin is responsible for lighting up the 'numpad' mode
     // with a custom LED effect
-    &NumPad,
+    //&NumPad,
 
     // The macros plugin adds support for macros
     &Macros,
@@ -341,12 +369,16 @@ void setup() {
 
     // The HostPowerManagement plugin enables waking up the host from suspend,
     // and allows us to turn LEDs off when it goes to sleep.
-    &HostPowerManagement
+    &HostPowerManagement,
+
+    &ActiveModColorEffect
+
   );
+
 
   // While we hope to improve this in the future, the NumPad plugin
   // needs to be explicitly told which keymap layer is your numpad layer
-  NumPad.numPadLayer = NUMPAD;
+  //NumPad.numPadLayer = NUMPAD;
 
   // We configure the AlphaSquare effect to use RED letters
   AlphaSquare.color = CRGB(255, 0, 0);
@@ -369,8 +401,12 @@ void setup() {
   // with USB devices
   LEDOff.activate();
 
-  MouseKeys.speed = 16;
+  MouseKeys.speed = FAST_MOUSE;
   MouseKeys.accelSpeed = 0;
+  MouseKeys.wheelSpeed = 4;
+
+  Kaleidoscope.setup();
+  //ActiveModColorEffect.highlight_color =
 }
 
 /** loop is the second of the standard Arduino sketch functions.
